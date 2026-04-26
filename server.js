@@ -33,12 +33,12 @@ app.post("/create-checkout-session", async (req, res) => {
 
   } catch (error) {
     console.error("Erreur Stripe :", error);
-    res.status(500).json({ error: "Impossible de créer la session Stripe." });
+    res.status(500).json({ error: "Unable to create Stripe Checkout session." });
   }
 });
 
 // --- SERVER START ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Backend Stripe actif sur le port " + PORT);
+  console.log("Stripe backend running on port " + PORT);
 });
