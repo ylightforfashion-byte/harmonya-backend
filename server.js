@@ -1,40 +1,44 @@
-import express from "express";
-import cors from "cors";
-import Stripe from "stripe";
+// --- IMPORTS ---
+const express = require("express");
+const cors = require("cors");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
+// --- APP SETUP ---
 const app = express();
-
-// ⚠️ À REMPLACER PAR TES CLÉS STRIPE
-const STRIPE_TEST_KEY = "sk_test_xxxxxxxxxxxxxxxxxxxxx";
-const STRIPE_LIVE_KEY = "sk_live_xxxxxxxxxxxxxxxxxxxxx";
-
-// MODE : "test" ou "live"
-const MODE = "test";
-
-const stripe = new Stripe(MODE === "test" ? STRIPE_TEST_KEY : STRIPE_LIVE_KEY);
-
 app.use(cors());
 app.use(express.json());
 
+// --- ROUTE CHECKOUT ---
 app.post("/create-checkout-session", async (req, res) => {
   try {
-    const { items } = req.body;
+    const { items, currency } = req.body;
 
+    // Stripe line_items format
+    const lineItems = items.map(item => ({
+      price: item.priceId,
+      quantity: item.quantity
+    }));
+
+    // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
       mode: "payment",
-      line_items: items,
-      success_url: "https://ton-site-google-sites.com/merci",
-      cancel_url: "https://ton-site-google-sites.com/annule"
+      line_items: lineItems,
+      currency: currency || "usd",
+      success_url: "https://harmonya-cart-panel.onrender.com/success",
+      cancel_url: "https://harmonya-cart-panel.onrender.com/cancel"
     });
 
     res.json({ url: session.url });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erreur lors de la création de la session" });
+
+  } catch (error) {
+    console.error("Erreur Stripe :", error);
+    res.status(500).json({ error: "Impossible de créer la session Stripe." });
   }
 });
 
+// --- SERVER START ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Harmonya backend running on port ${PORT}`);
+  console.log("Backend Stripe actif sur le port " + PORT);
 });
