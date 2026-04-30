@@ -27,5 +27,3 @@ app.get("/", (req, res) => {
 app.listen(CONFIG.PORT, () => {
   console.log(`Server running on port ${CONFIG.PORT}`);
 });
-  console.log(`Server running on port ${CONFIG.PORT}`);
-});
