@@ -1,5 +1,7 @@
 import express from "express";
+import cors from "cors";
 import { CONFIG } from "./config.js";
+import checkoutRoute from "./checkoutRoute.js";
 import { stripeWebhookHandler, stripeRawBody } from "./stripeWebhook.js";
 import { handleDownload } from "./downloadRoute.js";
 
@@ -9,8 +11,13 @@ const app = express();
 app.post("/stripe/webhook", stripeRawBody, stripeWebhookHandler);
 
 // Other routes use JSON
+app.use(cors());
 app.use(express.json());
 
+// Checkout route
+app.use("/", checkoutRoute);
+
+// Download route
 app.get("/dl/:token", handleDownload);
 
 app.get("/", (req, res) => {
@@ -18,5 +25,7 @@ app.get("/", (req, res) => {
 });
 
 app.listen(CONFIG.PORT, () => {
+  console.log(`Server running on port ${CONFIG.PORT}`);
+});
   console.log(`Server running on port ${CONFIG.PORT}`);
 });
