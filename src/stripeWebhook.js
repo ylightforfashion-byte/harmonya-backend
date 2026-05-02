@@ -2,9 +2,9 @@ import Stripe from "stripe";
 import bodyParser from "body-parser";
 import { CONFIG } from "./config.js";
 import { findProductByPriceId, appendDownloadRow } from "./sheets.js";
+import { logSaleToGoogleSheet } from "./sheets.js";
 import { sendEmail } from "./email.js";
 import { v4 as uuidv4 } from "uuid";
-import { logSaleToGoogleSheet } from "./sheets.js";
 
 const stripe = new Stripe(CONFIG.STRIPE_SECRET_KEY);
 
@@ -37,7 +37,7 @@ export function stripeWebhookHandler(req, res) {
 }
 
 async function handleCheckoutSessionCompleted(session) {
-  const product = await findProductByPriceId(priceId);
+  // 1) Récupération des données Stripe
   const email = session.customer_details?.email;
   const priceId = session.metadata?.price_id;
 
@@ -46,16 +46,28 @@ async function handleCheckoutSessionCompleted(session) {
     return;
   }
 
+  // 2) Récupération du produit dans Google Sheets (Products)
   const product = await findProductByPriceId(priceId);
   if (!product) {
     console.warn("Product not found for priceId:", priceId);
     return;
   }
 
+  // 3) Log de la vente dans HarmonyaLab_Logs → Sales
+  await logSaleToGoogleSheet({
+    email,
+    priceId,
+    fileId: product.driveFileId,
+    amount: session.amount_total / 100,
+    currency: session.currency
+  });
+
+  // 4) Génération du lien de téléchargement
   const token = uuidv4();
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 60 * 60 * 1000); // +1h
 
+  // 5) Log du téléchargement dans HarmonyaLab_Logs → Downloads
   await appendDownloadRow({
     timestamp: now,
     email,
@@ -68,6 +80,7 @@ async function handleCheckoutSessionCompleted(session) {
     downloadCount: 0
   });
 
+  // 6) Envoi de l’email
   const downloadLink = `${CONFIG.DOWNLOAD_BASE_URL}/${token}`;
 
   const body = `
@@ -82,6 +95,12 @@ ${downloadLink}
 If the link expires, reply to this email and we’ll help you.
   `;
 
+  await sendEmail({
+    to: email,
+    subject: `Your Harmony Lab download – ${product.name}`,
+    body
+  });
+}
   await sendEmail({
     to: email,
     subject: `Your Harmony Lab download – ${product.name}`,
