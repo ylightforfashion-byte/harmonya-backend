@@ -117,3 +117,27 @@ export async function updateDownloadRow(token, updates) {
     requestBody: { values }
   });
 }
+
+export async function logSaleToGoogleSheet({ email, priceId, fileId, amount, currency }) {
+  const auth = await getAuth();
+  const sheets = google.sheets({ version: "v4", auth });
+
+  const now = new Date().toISOString();
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: "1O-jUEkL9J5JV6sqM6x3FyJ20V30yXo6uZ1ezYOMv0uQ",
+    range: "Sales!A2:G",
+    valueInputOption: "USER_ENTERED",
+    requestBody: {
+      values: [[
+        now,
+        email,
+        priceId,
+        fileId,
+        amount,
+        currency,
+        "SUCCESS"
+      ]]
+    }
+  });
+}
