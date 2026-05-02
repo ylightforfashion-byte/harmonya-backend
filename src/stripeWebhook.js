@@ -4,6 +4,7 @@ import { CONFIG } from "./config.js";
 import { findProductByPriceId, appendDownloadRow } from "./sheets.js";
 import { sendEmail } from "./email.js";
 import { v4 as uuidv4 } from "uuid";
+import { logSaleToGoogleSheet } from "./sheets.js";
 
 const stripe = new Stripe(CONFIG.STRIPE_SECRET_KEY);
 
