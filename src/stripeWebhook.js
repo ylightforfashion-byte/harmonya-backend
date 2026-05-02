@@ -37,6 +37,7 @@ export function stripeWebhookHandler(req, res) {
 }
 
 async function handleCheckoutSessionCompleted(session) {
+  const product = await findProductByPriceId(priceId);
   const email = session.customer_details?.email;
   const priceId = session.metadata?.price_id;
 
