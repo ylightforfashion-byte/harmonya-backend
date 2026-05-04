@@ -1,143 +1,113 @@
 import { google } from "googleapis";
 import { CONFIG } from "./config.js";
 
-async function getAuth() {
+function getSheetsClient() {
   const auth = new google.auth.GoogleAuth({
-    scopes: [
-      "https://www.googleapis.com/auth/spreadsheets",
-      "https://www.googleapis.com/auth/drive.readonly"
-    ]
+    credentials: JSON.parse(CONFIG.GOOGLE_SERVICE_ACCOUNT),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
-  return auth;
+
+  return google.sheets({ version: "v4", auth });
 }
 
+// -------------------------------
+// PRODUITS
+// -------------------------------
 export async function findProductByPriceId(priceId) {
-  const auth = await getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
+  const sheets = getSheetsClient();
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: CONFIG.SHEET_ID,
-    range: `${CONFIG.PRODUCTS_SHEET_NAME}!A2:E`
+    range: `${CONFIG.PRODUCTS_SHEET_NAME}!A2:D`,
   });
 
   const rows = res.data.values || [];
+
   for (const row of rows) {
-    const [ref, name, pId, driveFileId] = row;
+    const [pId, ref, name, fileId] = row;
     if (pId === priceId) {
-      return { ref, name, priceId: pId, driveFileId };
+      return { priceId: pId, ref, name, fileId };
     }
   }
+
   return null;
 }
 
-export async function appendDownloadRow(download) {
-  const auth = await getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
-
-  const values = [[
-    download.timestamp.toISOString(),
-    download.email,
-    download.priceId,
-    download.ref,
-    download.productName,
-    download.token,
-    download.expiresAt.toISOString(),
-    download.downloadedAt || "",
-    download.downloadCount || 0
-  ]];
+// -------------------------------
+// DOWNLOADS
+// -------------------------------
+export async function appendDownloadRow(data) {
+  const sheets = getSheetsClient();
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: CONFIG.SHEET_ID,
-    range: `${CONFIG.DOWNLOADS_SHEET_NAME}!A2`,
+    range: `${CONFIG.DOWNLOADS_SHEET_NAME}!A:J`,
     valueInputOption: "RAW",
-    requestBody: { values }
+    requestBody: {
+      values: [
+        [
+          data.timestamp,
+          data.email,
+          data.priceId,
+          data.ref,
+          data.productName,
+          data.token,
+          data.expiresAt,
+          data.downloadedAt,
+          data.downloadCount,
+          data.fileId,
+        ],
+      ],
+    },
   });
 }
 
 export async function findDownloadByToken(token) {
-  const auth = await getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
+  const sheets = getSheetsClient();
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: CONFIG.SHEET_ID,
-    range: `${CONFIG.DOWNLOADS_SHEET_NAME}!A2:I`
+    range: `${CONFIG.DOWNLOADS_SHEET_NAME}!A:J`,
   });
 
   const rows = res.data.values || [];
-  let rowIndex = 2;
-  for (const row of rows) {
-    const [timestamp, email, priceId, ref, productName, t, expiresAt, downloadedAt, downloadCount] = row;
-    if (t === token) {
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row[5] === token) {
       return {
-        rowIndex,
-        timestamp,
-        email,
-        priceId,
-        ref,
-        productName,
-        token: t,
-        expiresAt,
-        downloadedAt,
-        downloadCount: Number(downloadCount || 0)
+        rowIndex: i + 1,
+        timestamp: row[0],
+        email: row[1],
+        priceId: row[2],
+        ref: row[3],
+        productName: row[4],
+        token: row[5],
+        expiresAt: row[6],
+        downloadedAt: row[7],
+        downloadCount: row[8],
+        fileId: row[9],
       };
     }
-    rowIndex++;
   }
+
   return null;
 }
 
-export async function updateDownloadRow(token, updates) {
-  const auth = await getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
+export async function updateDownloadRow(rowIndex, updates) {
+  const sheets = getSheetsClient();
 
-  const dl = await findDownloadByToken(token);
-  if (!dl) return;
+  const row = [];
 
-  const newDownloadedAt = updates.downloadedAt
-    ? updates.downloadedAt.toISOString()
-    : dl.downloadedAt;
-  const newCount = updates.downloadCount ?? dl.downloadCount;
-
-  const values = [[
-    dl.timestamp,
-    dl.email,
-    dl.priceId,
-    dl.ref,
-    dl.productName,
-    dl.token,
-    dl.expiresAt,
-    newDownloadedAt,
-    newCount
-  ]];
+  row[7] = updates.downloadedAt;
+  row[8] = updates.downloadCount;
 
   await sheets.spreadsheets.values.update({
     spreadsheetId: CONFIG.SHEET_ID,
-    range: `${CONFIG.DOWNLOADS_SHEET_NAME}!A${dl.rowIndex}:I${dl.rowIndex}`,
+    range: `${CONFIG.DOWNLOADS_SHEET_NAME}!H${rowIndex}:I${rowIndex}`,
     valueInputOption: "RAW",
-    requestBody: { values }
-  });
-}
-
-export async function logSaleToGoogleSheet({ email, priceId, fileId, amount, currency }) {
-  const auth = await getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
-
-  const now = new Date().toISOString();
-
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: "1O-jUEkL9J5JV6sqM6x3FyJ20V30yXo6uZ1ezYOMv0uQ",
-    range: "Sales!A2:G",
-    valueInputOption: "USER_ENTERED",
     requestBody: {
-      values: [[
-        now,
-        email,
-        priceId,
-        fileId,
-        amount,
-        currency,
-        "SUCCESS"
-      ]]
-    }
+      values: [[updates.downloadedAt, updates.downloadCount]],
+    },
   });
 }
