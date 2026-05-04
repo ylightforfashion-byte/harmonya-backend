@@ -8,6 +8,7 @@ export const CONFIG = {
   PRODUCTS_SHEET_NAME: "Products",
   DOWNLOADS_SHEET_NAME: "Downloads",
 
-  DRIVE_FOLDER_ID: "18StJGw3AcfcJEM_n1SM6cWaRaKxwHmAz",
+  GOOGLE_SERVICE_ACCOUNT: process.env.GOOGLE_SERVICE_ACCOUNT,
 
   FRONT_BASE_URL: process.env.FRONT_BASE_URL
+};
