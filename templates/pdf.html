@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Harmonya Lab – Your Downloads</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 60px;
+      font-family: 'Playfair Display', serif;
+      background-color: #f5f1ea; /* beige clair */
+      color: #111111; /* noir profond */
+    }
+
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff; /* blanc */
+      padding: 40px 50px;
+      border-radius: 8px;
+      border: 1px solid #e0d6c8; /* gris chaud */
+    }
+
+    .logo-wrapper {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: contain;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 26px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 10px 0 4px;
+      color: #0b3b3b; /* bleu canard */
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #b89a5a; /* or très clair */
+      margin-bottom: 32px;
+    }
+
+    .intro {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+      color: #333333;
+    }
+
+    .section-title {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #0b3b3b;
+      margin: 32px 0 12px;
+      border-top: 1px solid #e0d6c8;
+      padding-top: 18px;
+    }
+
+    .product {
+      margin-bottom: 22px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed #e0d6c8;
+    }
+
+    .product-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 4px;
+      color: #111111;
+    }
+
+    .product-ref {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #777777;
+      margin: 0 0 8px;
+    }
+
+    .product-note {
+      font-size: 12px;
+      color: #555555;
+      margin: 0 0 6px;
+    }
+
+    .download-link {
+      font-size: 13px;
+      color: #b8893a; /* or */
+      text-decoration: none;
+      border-bottom: 1px solid rgba(184, 137, 58, 0.4);
+      padding-bottom: 1px;
+      word-break: break-all;
+    }
+
+    .download-link:hover {
+      color: #c79c4a;
+      border-bottom-color: rgba(199, 156, 74, 0.8);
+    }
+
+    .meta {
+      font-size: 11px;
+      color: #777777;
+      margin-top: 24px;
+      line-height: 1.5;
+    }
+
+    .contact {
+      font-size: 12px;
+      margin-top: 18px;
+      color: #333333;
+    }
+
+    .footer {
+      margin-top: 32px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #aaaaaa;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <div class="logo-wrapper">
+      <img class="logo" src="{{LOGO_URL}}" alt="Harmonya Lab logo" />
+    </div>
+
+    <h1 class="title">Your premium downloads</h1>
+    <div class="subtitle">Harmonya Lab</div>
+
+    <div class="intro">
+      Thank you for your purchase.<br />
+      Your artwork is ready to download. Each link below is unique and valid for
+      <strong>1 hour</strong> from the time of purchase.
+    </div>
+
+    <div class="section-title">Your files</div>
+
+    {{PRODUCTS_BLOCK}}
+
+    <div class="meta">
+      Download links are strictly personal and time-limited. If your link has expired or you
+      experience any issue, you will be able to request a fresh link through our support.
+    </div>
+
+    <div class="contact">
+      Need help? Please contact Harmonya Lab through the support form available on our website.
+    </div>
+
+    <div class="footer">
+      © {{YEAR}} Harmonya Lab · All rights reserved
+    </div>
+
+  </div>
+</body>
+</html>
