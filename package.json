@@ -1,18 +1,16 @@
 {
-  "name": "harmonyalab-backend",
+  "name": "harmonya-backend",
   "version": "1.0.0",
-  "description": "Harmony Lab backend: Stripe webhook, expiring download links, Google Sheets logging.",
-  "main": "src/server.js",
   "type": "module",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.0",
-    "stripe": "^14.0.0",
-    "googleapis": "^131.0.0",
-    "nodemailer": "^6.9.0",
-    "uuid": "^9.0.0",
-    "body-parser": "^1.20.2"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "googleapis": "^140.0.0",
+    "stripe": "^16.0.0"
   }
 }
