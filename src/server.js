@@ -9,6 +9,12 @@ import { downloadHandler } from "./download.js";
 
 const app = express();
 
+// Route Stripe → PDF
+app.get("/success", successHandler);
+
+// Route téléchargement sécurisé
+app.get("/dl/:token", downloadHandler);
+
 // Stripe webhook must use raw body
 app.post("/stripe/webhook", stripeRawBody, stripeWebhookHandler);
 
