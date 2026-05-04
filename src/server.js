@@ -1,31 +1,33 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
+
 import { CONFIG } from "./config.js";
-import checkoutRoute from "./checkoutRoute.js";
-import { stripeWebhookHandler, stripeRawBody } from "./stripeWebhook.js";
 import { successHandler } from "./success.js";
 import { downloadHandler } from "./download.js";
+import { stripeWebhookHandler } from "./stripeWebhook.js";
 
 const app = express();
 
-// Route Stripe → PDF
-app.get("/success", successHandler);
+// Webhook Stripe → doit recevoir le raw body
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  stripeWebhookHandler
+);
 
-// Route téléchargement sécurisé
-app.get("/dl/:token", downloadHandler);
-
-// Stripe webhook must use raw body
-app.post("/stripe/webhook", stripeRawBody, stripeWebhookHandler);
-
-// Other routes use JSON
+// Pour le reste de l’API
 app.use(cors());
 app.use(express.json());
 
-// Checkout route
-app.use("/", checkoutRoute);
+// Page de remerciement + liens de téléchargement
+app.get("/success", successHandler);
+
+// Téléchargement sécurisé par token
+app.get("/dl/:token", downloadHandler);
 
 app.get("/", (req, res) => {
-  res.send("Harmony Lab backend is running.");
+  res.send("Harmonya Lab backend is running.");
 });
 
 app.listen(CONFIG.PORT, () => {
