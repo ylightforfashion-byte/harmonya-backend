@@ -4,6 +4,8 @@ import { CONFIG } from "./config.js";
 import checkoutRoute from "./checkoutRoute.js";
 import { stripeWebhookHandler, stripeRawBody } from "./stripeWebhook.js";
 import { handleDownload } from "./downloadRoute.js";
+import { successHandler } from "./success.js";
+import { downloadHandler } from "./download.js";
 
 const app = express();
 
