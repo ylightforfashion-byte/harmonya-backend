@@ -1,42 +1,43 @@
-// download.js
 import { findDownloadByToken, updateDownloadRow } from "./sheets.js";
-import { downloadDriveFile } from "./drive.js";
+import { getDriveFileStream } from "./drive.js";
 
 export async function downloadHandler(req, res) {
+  const { token } = req.params;
+
+  if (!token) {
+    return res.status(400).send("Missing token");
+  }
+
+  const record = await findDownloadByToken(token);
+  if (!record) {
+    return res.status(404).send("Download not found");
+  }
+
+  const now = new Date();
+  const expiresAt = new Date(record.expiresAt);
+
+  if (now > expiresAt) {
+    return res.status(403).send("Download link expired");
+  }
+
+  // Mise à jour du tracking
+  await updateDownloadRow(record.rowIndex, {
+    downloadedAt: now.toISOString(),
+    downloadCount: Number(record.downloadCount || 0) + 1,
+  });
+
   try {
-    const { token } = req.params;
-    if (!token) return res.status(400).send("Missing token");
+    const stream = await getDriveFileStream(record.fileId);
 
-    // 1. Récupérer l’entrée de téléchargement
-    const dl = await findDownloadByToken(token);
-    if (!dl) return res.status(404).send("Download not found");
-
-    const now = new Date();
-    const expiresAt = new Date(dl.expiresAt);
-
-    // 2. Vérifier expiration
-    if (now > expiresAt) {
-      return res.status(410).send("Download link has expired");
-    }
-
-    // 3. Télécharger le fichier HD depuis Drive
-    const { buffer, mimeType, fileName } = await downloadDriveFile(dl.fileId);
-
-    // 4. Mettre à jour le tracking
-    await updateDownloadRow(dl.rowIndex, {
-      downloadedAt: now,
-      downloadCount: (dl.downloadCount || 0) + 1
-    });
-
-    // 5. Envoyer le fichier
-    res.setHeader("Content-Type", mimeType || "application/octet-stream");
+    res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${fileName || "harmonya-download"}"`
+      `attachment; filename="${record.productName.replace(/[^a-z0-9]/gi, "_")}.zip"`
     );
-    res.send(buffer);
+
+    stream.pipe(res);
   } catch (err) {
-    console.error("Error in /dl/:token:", err);
-    res.status(500).send("Internal server error");
+    console.error("Drive download error:", err);
+    res.status(500).send("Error downloading file");
   }
 }
