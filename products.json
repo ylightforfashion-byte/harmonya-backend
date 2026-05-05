@@ -1,0 +1,10 @@
+{
+  "pack-minimalist": {
+    "name": "Minimalist Pack",
+    "file": "pack-minimalist.pdf"
+  },
+  "pack-premium": {
+    "name": "Premium Pack",
+    "file": "pack-premium.pdf"
+  }
+}
