@@ -1,35 +1,62 @@
-import "dotenv/config";
-import express from "express";
-import cors from "cors";
-
-import { CONFIG } from "./config.js";
-import { successHandler } from "./success.js";
-import { downloadHandler } from "./download.js";
-import { stripeWebhookHandler } from "./stripeWebhook.js";
+const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
+const { initDb } = require("./database");
+const { createToken } = require("./tokens");
+const { registerDownload } = require("./download");
 
 const app = express();
-
-// Webhook Stripe → doit recevoir le raw body
-app.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  stripeWebhookHandler
-);
-
-// Pour le reste de l’API
 app.use(cors());
 app.use(express.json());
 
-// Page de remerciement + liens de téléchargement
-app.get("/success", successHandler);
-
-// Téléchargement sécurisé par token
-app.get("/dl/:token", downloadHandler);
-
-app.get("/", (req, res) => {
-  res.send("Harmonya Lab backend is running.");
+initDb().then(() => {
+  console.log("Database initialized");
 });
 
-app.listen(CONFIG.PORT, () => {
-  console.log(`Server running on port ${CONFIG.PORT}`);
+app.get("/", (req, res) => {
+  res.send("Harmonya backend is running.");
+});
+
+// Page de remerciement Stripe : /success?product=pack-minimalist
+app.get("/success", async (req, res) => {
+  try {
+    const slug = req.query.product;
+    if (!slug) {
+      return res.status(400).send("Missing product parameter.");
+    }
+
+    const products = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "products.json"), "utf8")
+    );
+    const product = products[slug];
+
+    if (!product) {
+      return res.status(404).send("Product not found.");
+    }
+
+    const token = await createToken(slug);
+
+    const template = fs.readFileSync(
+      path.join(__dirname, "views", "success.html"),
+      "utf8"
+    );
+
+    const html = template
+      .replace("{{PRODUCT_NAME}}", product.name)
+      .replace("{{DOWNLOAD_URL}}", `/dl/${token}`);
+
+    res.send(html);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error.");
+  }
+});
+
+// Route de téléchargement sécurisé
+registerDownload(app);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
 });
