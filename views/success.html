@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Thank you for your purchase</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f7f4f0;
+      color: #111111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #ffffff;
+      padding: 32px 40px;
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.08);
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    p {
+      margin: 8px 0;
+    }
+    a.download-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      border-radius: 999px;
+      background: #111111;
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    a.download-btn:hover {
+      background: #222222;
+    }
+    .note {
+      margin-top: 16px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Thank you for your purchase!</h1>
+    <p id="product-name"></p>
+
+    <a id="download-link" class="download-btn">
+      Download your file
+    </a>
+
+    <p class="note">
+      This download link is temporary for security reasons. Please save your file after downloading.
+    </p>
+  </div>
+
+  <script>
+    document.getElementById("product-name").innerText = "{{PRODUCT_NAME}}";
+    document.getElementById("download-link").href = "{{DOWNLOAD_URL}}";
+  </script>
+</body>
+</html>
