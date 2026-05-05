@@ -1,43 +1,35 @@
-import { findDownloadByToken, updateDownloadRow } from "./sheets.js";
-import { getDriveFileStream } from "./drive.js";
+const path = require("path");
+const fs = require("fs");
+const { validateAndConsumeToken } = require("./tokens");
 
-export async function downloadHandler(req, res) {
-  const { token } = req.params;
+function registerDownload(app) {
+  app.get("/dl/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const validation = await validateAndConsumeToken(token);
 
-  if (!token) {
-    return res.status(400).send("Missing token");
-  }
+      if (!validation.valid) {
+        return res
+          .status(400)
+          .send("This download link has expired or is invalid.");
+      }
 
-  const record = await findDownloadByToken(token);
-  if (!record) {
-    return res.status(404).send("Download not found");
-  }
+      const products = JSON.parse(
+        fs.readFileSync(path.join(__dirname, "products.json"), "utf8")
+      );
+      const product = products[validation.productSlug];
 
-  const now = new Date();
-  const expiresAt = new Date(record.expiresAt);
+      if (!product) {
+        return res.status(404).send("Product not found.");
+      }
 
-  if (now > expiresAt) {
-    return res.status(403).send("Download link expired");
-  }
-
-  // Mise à jour du tracking
-  await updateDownloadRow(record.rowIndex, {
-    downloadedAt: now.toISOString(),
-    downloadCount: Number(record.downloadCount || 0) + 1,
+      const filePath = path.join(__dirname, "files", product.file);
+      res.download(filePath);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Server error.");
+    }
   });
-
-  try {
-    const stream = await getDriveFileStream(record.fileId);
-
-    res.setHeader("Content-Type", "application/octet-stream");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${record.productName.replace(/[^a-z0-9]/gi, "_")}.zip"`
-    );
-
-    stream.pipe(res);
-  } catch (err) {
-    console.error("Drive download error:", err);
-    res.status(500).send("Error downloading file");
-  }
 }
+
+module.exports = { registerDownload };
