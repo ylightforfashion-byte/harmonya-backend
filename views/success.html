@@ -12,6 +12,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
+      margin: 0;
     }
     .card {
       background: #ffffff;
@@ -65,8 +66,34 @@
   </div>
 
   <script>
-    document.getElementById("product-name").innerText = "{{PRODUCT_NAME}}";
-    document.getElementById("download-link").href = "{{DOWNLOAD_URL}}";
+    // Read the parameter sent by Stripe Checkout
+    const params = new URLSearchParams(window.location.search);
+    const product = params.get("product");
+
+    // Your product list + download links
+    const files = {
+      "poster001": {
+        name: "Beige Aesthetic 12",
+        url: "https://your-site.com/downloads/poster001.jpg"
+      },
+      "poster002": {
+        name: "Minimalist Blue Poster",
+        url: "https://your-site.com/downloads/poster002.jpg"
+      },
+      "bundle001": {
+        name: "Aesthetic Bundle",
+        url: "https://your-site.com/downloads/bundle001.zip"
+      }
+    };
+
+    // Dynamic content update
+    if (product && files[product]) {
+      document.getElementById("product-name").innerText = files[product].name;
+      document.getElementById("download-link").href = files[product].url;
+    } else {
+      document.getElementById("product-name").innerText = "Product not found";
+      document.getElementById("download-link").style.display = "none";
+    }
   </script>
 </body>
 </html>
